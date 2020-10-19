@@ -1,0 +1,25 @@
+{
+  "name": "munchkinclient",
+  "version": "1.0.0",
+  "description": "Event client for the Munchkin game representing a player",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meanJerkTime/munchkinClient.git"
+  },
+  "keywords": [
+    "node",
+    "socket.io",
+    "events",
+    "network"
+  ],
+  "author": "Joe Pennock, Diane Stephani, Edgar Romero, Brendon Hampton",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/meanJerkTime/munchkinClient/issues"
+  },
+  "homepage": "https://github.com/meanJerkTime/munchkinClient#readme"
+}
