@@ -14,7 +14,7 @@ const socket = io.connect(host);
 
 socket.on('toClient', () => {
 
-// console.log('recieved from hub');
+//   console.log('recieved from hub');
 
   inquirer
     .prompt([
@@ -63,7 +63,7 @@ socket.on('toClient', () => {
     });
 });
 
-socket.emit('fromClient');
+  socket.emit('fromClient');
 
 // setInterval( () => {
 //   socket.emit('fromPlayer1');
