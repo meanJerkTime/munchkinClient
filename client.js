@@ -1,20 +1,14 @@
 'use strict';
-
+require('dotenv').config();
 const inquirer = require('inquirer');
-
-'use strict';
-
-/** 3rd party dependencies */
-// require('dotenv').config({path: require('find-config')('.env')});
 const io = require('socket.io-client');
 
 // host needs to change to the heroku host
-const host = 'http://localhost:3000';
-const socket = io.connect(host);
+const socket = io.connect('http://localhost:3000');
 
 socket.on('toClient', () => {
 
-// console.log('recieved from hub');
+console.log('recieved from hub');
 
   inquirer
     .prompt([

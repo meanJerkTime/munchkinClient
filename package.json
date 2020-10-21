@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/meanJerkTime/munchkinClient#readme",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "inquirer": "^7.3.3",
     "socket.io-client": "^2.3.1"
   }
