@@ -1,75 +1,121 @@
 'use strict';
 
-const inquirer = require('inquirer');
-
-'use strict';
-
 /** 3rd party dependencies */
 // require('dotenv').config({path: require('find-config')('.env')});
 const io = require('socket.io-client');
+const Enquirer = require('enquirer');
 
-// host needs to change to the heroku host
-const host = 'http://localhost:3000';
-const socket = io.connect(host);
+/** Custom modules */
 
-socket.on('toClient', () => {
+/** Socket connections to hub */
+const host = 'http://localhost:3000' // Points to server hub is running on.
+const socket = io.connect(host); // Global connection to hub.
+const gameRoomConnection = io.connect(`${host}/gameroom`); // Connection to hub namespace.
 
-//   console.log('recieved from hub');
+/** Game loop */
+const enquirer = new Enquirer();
 
-  inquirer
-    .prompt([
-        {
-            type: 'list',
-            name: 'joinCreateRoom',
-            message: 'Would you like to...',
-            choices: ['join a room', 'create a room']
+async function setUpRoom(){
+  
+  const creatOrJoinRoom = await enquirer.prompt({
+    type: 'select',
+    name: 'createOrJoin',
+    message: 'Would you like to create a new game or join an existing one?',
+    choices: ['Create a new room', 'Join an existing room'],
+  });
 
-        },
-        
-    ])
-    .then(answers => {
-        if(answers.joinCreateRoom == 'join a room') {
-            inquirer
-            .prompt([
-                {
-                type: 'list',
-                name: 'room',
-                message: 'Please Select a Room to Join',
-                choices: ['R3','R4','R5','R6']
-                },
-            ])
-            .then(answers => {
-                socket.emit('joinRoom', answers.room);
-            });
-        }
+  if( creatOrJoinRoom.createOrJoin === 'Create a new room' ){
 
-        // create a room needs to be built out first
-        if(answers.joinCreateRoom == 'create a room'){
-            inquirer
-            .prompt([
-                {
-                    type: 'list',
-                    name:'roomsList',
-                    message: 'Create A Room',
-                    choices: ['R3','R4','R5','R6']
-                },
-            ])
-            .then ((answers) =>{
-                console.log('you have created Room', answers.roomsList);
-                socket.emit('createRoom', answers.roomsList);
-                socket.emit('answers',answers);
-            });
-        }
+    const roomName = await enquirer.prompt({
+      type: 'input',
+      name: 'roomName',
+      message: 'What would you like to call your game room?'
     });
-});
 
-  socket.emit('fromClient');
+    console.log(roomName.roomName);
+
+    gameRoomConnection.emit('create-new-room', roomName.roomName);
+
+  } else {
+    
+    gameRoomCOnnection.emit
+    gameRoomConnection.on('room-list',)
+
+    const joinExistingRoom = await enquirer.prompt({
+      type: 'select',
+      name: 'join-room',
+      message: 'Choose the room you want to join',
+      choices: []
+    })
+
+  };
+
+};
+
+setUpRoom();
+
+async function start(){
+
+  const askUsername = await enquirer.prompt({
+    type: 'input',
+    name: 'username',
+    message: 'What is your username?'
+  });
+
+  gameRoomConnection.emit('get-player-username', askUsername.username);
+
+  const playerSex = await enquirer.prompt({
+    type: 'select',
+    name: 'sex',
+    message: 'Choose player sex',
+    choices: ['male', 'female'],
+  });
+
+  gameRoomConnection.on('ready-player-1', msg => {
+    console.log(msg);
+  });
+
+  // const munchkin = {
+  //   username = askUsername.username,
+  //   player = player,
+  // };
+
+  gameRoomConnection.emit('player-object', munchkin);
+
+};
+
+function rollTurnOrder(){
+  const diceRoll = Math.floor(Math.random() * 6)+1;
+  return diceRoll;
+};
+
+async function kickDownDoor(){
+
+  const monster = m1;
+
+};
+
+async function combat(){
+
+};
+
+async function applyCurse(){
+
+};
+
+async function lootTheRoom(){
+
+};
+
+async function lookForTrouble(){
+
+};
 
 /* 
 
 BASIC TURN ORDER
 
-1. players joins a room
+1. players joins a game
 2. game starts
 3. players roll for turn order
 4. P1 kicks down door
@@ -98,4 +144,3 @@ BASIC TURN ORDER
 10. Repeat from step 1
 
 */
-
