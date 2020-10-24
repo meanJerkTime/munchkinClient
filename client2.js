@@ -1,71 +1,60 @@
 'use strict';
+require('dotenv').config();
 
-const inquirer = require('inquirer');
-
-'use strict';
-
-/** 3rd party dependencies */
-// require('dotenv').config({path: require('find-config')('.env')});
+const { prompt } =require('enquirer');
+const { Select } = require('enquirer');
+const { Input } = require('enquirer');
 const io = require('socket.io-client');
 
-// host needs to change to the heroku host
-const host = 'http://localhost:3000';
+// let host = 'https://munchkin-401-hub.herokuapp.com';
+let host = 'http://localhost:5000';
+
+
 const socket = io.connect(host);
 
-socket.on('toClient', () => {
+socket.emit('fromPlayer');
 
-//   console.log('recieved from hub');
 
-  inquirer
-    .prompt([
-        {
-            type: 'list',
-            name: 'joinCreateRoom',
-            message: 'Would you like to...',
-            choices: ['join a room', 'create a room']
+socket.on('toPlayer', async () => {
 
-        },
-        
-    ])
-    .then(answers => {
-        if(answers.joinCreateRoom == 'join a room') {
-            inquirer
-            .prompt([
-                {
-                type: 'list',
-                name: 'room',
-                message: 'Please Select a Room to Join',
-                choices: ['R3','R4','R5','R6']
-                },
-            ])
-            .then(answers => {
-                socket.emit('joinRoom', answers.room);
-            });
-        }
+    const login = new Select({
+        name: 'signUpSignIn',
+        message: 'Would you like to ...',
+        choices: ['Sign Up', 'Sign In']
+      });
+       
+      login.run()
+        .then, async (answers => {
+            if(answers == 'Sign Up') {
+                const question = [
+                    {
+                    type: 'input',
+                    name: 'username',
+                    message: 'What is your player name?',
+                    },
+                    {
+                    type: 'password',
+                    name: 'password',
+                    message: 'What is your password?',
+                    },
+                  
+                ];
+                // signup username 
+                let answers = prompt(question);       
+            }
+            if(answers == 'Sign In') {
+                console.log(answers);
+                const username = new Input({
+                    message: 'What is your username?',
+                  });
+                   
+                  username.run()
+                    .then(answer => console.log('Username:',answer))
+                    .catch(console.log);
+                  
+            }
 
-        // create a room needs to be built out first
-        if(answers.joinCreateRoom == 'create a room'){
-            inquirer
-            .prompt([
-                {
-                    type: 'list',
-                    name:'roomsList',
-                    message: 'Create A Room',
-                    choices: ['R3','R4','R5','R6']
-                },
-            ])
-            .then ((answers) =>{
-                console.log('you have created Room', answers.roomsList);
-                socket.emit('createRoom', answers.roomsList);
-                socket.emit('answers',answers);
-            });
-        }
-    });
+        })
+        .catch(console.error); 
 });
-
-  socket.emit('fromClient');
-
-// setInterval( () => {
-//   socket.emit('fromPlayer1');
-// }, 2000);
 
