@@ -5,9 +5,14 @@ const inquirer = require('inquirer');
 const io = require('socket.io-client');
 const Enquirer = require('enquirer');
 
-let host = 'https://munchkin-401-hub.herokuapp.com';
-// let host = 'http://localhost:5000';
-const socket = io.connect(host);
+// let host = 'https://munchkin-401-hub.herokuapp.com';
+let host = 'http://localhost:5000';
+const socket = io.connect(host, {
+    'reconnection': true,
+    'reconnectionDelay': 1000,
+    'reconnectionDelayMax' : 5000,
+    'reconnectionAttempts': 5
+});
 
 socket.emit('fromPlayer');
 
@@ -62,7 +67,8 @@ socket.on('toPlayer', () => {
                     setUpRoom();
                 })
                 socket.on('inValid', () => {
-                    console.log('Invalid Login');
+                console.log('Invalid Login');
+                socket.disconnect();
                 })
             });
             });
@@ -93,6 +99,7 @@ socket.on('toPlayer', () => {
                 })
                 socket.on('inValid', () => {
                     console.log('Invalid Login');
+                    socket.disconnect();
                 })
             });
         }
@@ -100,18 +107,6 @@ socket.on('toPlayer', () => {
 });
 
 
-
-/** 3rd party dependencies */
-// require('dotenv').config({path: require('find-config')('.env')});
-
-
-/** Custom modules */
-
-/** Socket connections to hub */
- // Global connection to hub.
-// const gameRoomConnection = io.connect(`${host}/gameroom`); // Connection to hub namespace. Not currently being used.
-
-// socket.emit('test', 'hello world') // test connection
 
 /** Game loop */
 const enquirer = new Enquirer();
