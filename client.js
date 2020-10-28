@@ -429,7 +429,6 @@ async function combat(payload, monster){
 
         console.log('Oh no! You get some Bad Stuff!');
         badStuff(payload, monster);
-
       };
 
   } catch(err) {

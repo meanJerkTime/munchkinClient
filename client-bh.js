@@ -16,17 +16,13 @@ const socket = io.connect(host, {
     'reconnectionDelayMax' : 5000,
     'reconnectionAttempts': 5
 });
-    
-    socket.on('player', payload => {
-    console.log(payload);
-    })
-    socket.on('playerTurn',(payload) => {
-        playHand(payload);
-    })
 
 
-    socket.on('toPlayer', () => {
 
+
+// socket.emit('fromPlayer');
+
+    socket.on('login', () => {
         inquirer
           .prompt([
               {
@@ -72,7 +68,7 @@ const socket = io.connect(host, {
                       socket.emit('signIn',answers);
                       socket.on('valid', () => {
                           console.log('Success you are logged in!');
-                          setUpRoom();
+                         
                       })
                       socket.on('inValid', () => {
                       console.log('Invalid Login');
@@ -101,7 +97,10 @@ const socket = io.connect(host, {
                       socket.emit('signIn',answers);
                       socket.on('valid', () => {
                           console.log('Success you are logged in!');
-                          setUpRoom();
+                          socket.emit('game');
+                          socket.on('player', payload => {
+                          console.log(payload);
+                          })
                       })
                       socket.on('inValid', () => {
                           console.log('Invalid Login');
@@ -139,6 +138,10 @@ const socket = io.connect(host, {
 const enquirer = new Enquirer();
 
 //creates or joins a room based on user input
+
+socket.on('playerTurn', () => {
+
+
 async function setUpRoom(){
     try {
 
@@ -208,6 +211,7 @@ async function setUpRoom(){
     }
 };
 
+setUpRoom()
 
 
 async function start(){
@@ -388,6 +392,7 @@ function combat(payload, monster){
 
 };
 
+
 function badStuff(payload, monster){
 
   // apply monster.badStuff to player
@@ -462,8 +467,10 @@ function discard(player, n){
 };
 
 function nextPlayerTurn() {
-    setTimeout(() => {
-        socket.emit('nextPlayer');
-
-    },3000)
+  setTimeout(() => {
+    socket.emit('nextPlayer');
+    
+  },3000)
 }
+
+})
