@@ -4,9 +4,10 @@
 // require('dotenv').config({path: require('find-config')('.env')});
 const io = require('socket.io-client');
 const Enquirer = require('enquirer');
+const inquirer = require('inquirer')
 const _ = require('lodash');
 
-<<<<<<< HEAD
+
 // let host = 'https://munchkin-401-hub.herokuapp.com';
 let host = 'http://localhost:5000';
 const socket = io.connect(host, {
@@ -15,9 +16,9 @@ const socket = io.connect(host, {
     'reconnectionDelayMax' : 5000,
     'reconnectionAttempts': 5
 });
-=======
+
 /** Custom modules */
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
+
 
 /** Socket connections to hub */
 const host = 'http://localhost:3000' // Points to server hub is running on.
@@ -33,10 +34,10 @@ const enquirer = new Enquirer();
 let playerData = {};
 let playerQueue = [];
 
-<<<<<<< HEAD
-        },
+
+
         
-    ])
+    inquirer
     .then(answers => {
         if(answers.signUpSignIn == 'Sign Up') {
             inquirer
@@ -111,10 +112,10 @@ let playerQueue = [];
             });
         }
     });
-=======
+
 socket.on('player', (msg, payload) => {
   console.log({msg, payload});
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
+
 });
 
 //creates or joins a room based on user input
@@ -122,10 +123,9 @@ async function setUpRoom(){
 
   try {
 
-<<<<<<< HEAD
 /** Game loop */
 const enquirer = new Enquirer();
-=======
+
     const userObj = {};
 
       const askUsername = await enquirer.prompt({
@@ -152,7 +152,6 @@ const enquirer = new Enquirer();
           name: 'roomName',
           message: 'What would you like to call your game room?'
         });
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
 
         userObj.create = true;
         userObj.room = roomName.roomName;
