@@ -4,9 +4,21 @@
 // require('dotenv').config({path: require('find-config')('.env')});
 const io = require('socket.io-client');
 const Enquirer = require('enquirer');
+const inquirer = require('inquirer')
 const _ = require('lodash');
 
+
+// let host = 'https://munchkin-401-hub.herokuapp.com';
+let host = 'http://localhost:5000';
+const socket = io.connect(host, {
+    'reconnection': true,
+    'reconnectionDelay': 1000,
+    'reconnectionDelayMax' : 5000,
+    'reconnectionAttempts': 5
+});
+
 /** Custom modules */
+
 
 /** Socket connections to hub */
 const host = 'http://localhost:3000' // Points to server hub is running on.
@@ -22,14 +34,97 @@ const enquirer = new Enquirer();
 let playerData = {};
 let playerQueue = [];
 
+
+
+        
+    inquirer
+    .then(answers => {
+        if(answers.signUpSignIn == 'Sign Up') {
+            inquirer
+            .prompt([
+                {
+                type: 'input',
+                name: 'userName',
+                message: 'Please Enter a Username',
+                },
+                {
+                type: 'input',
+                name: 'password',
+                message: 'Please Enter a Password', 
+                }
+            ])
+            .then(answers => {
+                socket.emit('signUp', answers);
+                inquirer
+            .prompt([
+                {
+                    type: "input",
+                    name:"userName",
+                    message: 'Please Enter Your Username',
+                },
+                {
+                    type: "input",
+                    name:"password",
+                    message: 'Please Enter Your Password',
+                },
+            ])
+            .then ((answers) =>{
+                socket.emit('signIn',answers);
+                socket.on('valid', () => {
+                    console.log('Success you are logged in!');
+                    setUpRoom();
+                })
+                socket.on('inValid', () => {
+                console.log('Invalid Login');
+                socket.disconnect();
+                })
+            });
+            });
+        }
+
+
+
+        // create a room needs to be built out first
+        if(answers.signUpSignIn == 'Sign In'){
+            inquirer
+            .prompt([
+                {
+                    type: "input",
+                    name:"userName",
+                    message: 'Please Enter Your Username',
+                },
+                {
+                    type: "input",
+                    name:"password",
+                    message: 'Please Enter Your Password',
+                },
+            ])
+            .then ((answers) =>{
+                socket.emit('signIn',answers);
+                socket.on('valid', () => {
+                    console.log('Success you are logged in!');
+                    setUpRoom();
+                })
+                socket.on('inValid', () => {
+                    console.log('Invalid Login');
+                    socket.disconnect();
+                })
+            });
+        }
+    });
+
 socket.on('player', (msg, payload) => {
   console.log({msg, payload});
+
 });
 
 //creates or joins a room based on user input
 async function setUpRoom(){
 
   try {
+
+/** Game loop */
+const enquirer = new Enquirer();
 
     const userObj = {};
 
