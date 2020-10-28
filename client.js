@@ -22,6 +22,10 @@ const enquirer = new Enquirer();
 let playerData = {};
 let playerQueue = [];
 
+socket.on('player', (msg, payload) => {
+  console.log({msg, payload});
+});
+
 //creates or joins a room based on user input
 async function setUpRoom(){
 
@@ -130,12 +134,12 @@ socket.on('add-new-player', async (payload) => {
 
 });
 
-socket.on('add-to-queue', payload => {
+// socket.on('add-to-queue', payload => {
 
-  playerQueue.push(payload);
-  console.log(`${payload.username} added to queue`);
+//   playerQueue.push(payload);
+//   console.log(`${payload.username} added to queue`);
 
-});
+// });
 
 // async function start(){
 
@@ -154,6 +158,10 @@ socket.on('add-to-queue', payload => {
 //   };
 
 // };
+
+socket.on('player-turn', () => {
+ 
+
 
 socket.on('play-hand', async (payload) => {
 
@@ -209,7 +217,7 @@ socket.on('play-hand', async (payload) => {
 
       socket.emit('hand-has-been-played', payload);
 
-      // kickDownDoor();
+      kickDownDoor();
 
     };
 
@@ -217,7 +225,7 @@ socket.on('play-hand', async (payload) => {
 
     socket.emit('hand-has-been-played', payload);
 
-    // kickDownDoor();
+    kickDownDoor();
 
   };
 
@@ -273,6 +281,8 @@ async function kickDownDoor(payload, card){
       if(card.type === 'monster'){
   
          await combat(payload, card);
+
+         socket.emit('next-player');
   
         socket.emit('combat-ended', payload, card);
   
@@ -409,6 +419,7 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
+});
 
 /* 
 
