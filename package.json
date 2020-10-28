@@ -4,7 +4,8 @@
   "description": "Event client for the Munchkin game representing a player",
   "main": "client.js",
   "scripts": {
-    "test": "jest --coverage --verbose"
+    "test": "jest --coverage --verbose",
+    "start": "node client.js"
   },
   "repository": {
     "type": "git",

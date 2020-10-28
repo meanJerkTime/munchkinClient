@@ -1,120 +1,149 @@
 'use strict';
 require('dotenv').config();
 const inquirer = require('inquirer');
+const Choice = require('inquirer/lib/objects/choice');
+const Enquirer = require('enquirer');
 
 const io = require('socket.io-client');
-const Enquirer = require('enquirer');
+
 
 // let host = 'https://munchkin-401-hub.herokuapp.com';
 let host = 'http://localhost:5000';
+
 const socket = io.connect(host, {
     'reconnection': true,
     'reconnectionDelay': 1000,
     'reconnectionDelayMax' : 5000,
     'reconnectionAttempts': 5
 });
-
-socket.emit('fromPlayer');
-
-
-socket.on('toPlayer', () => {
-
-  inquirer
-    .prompt([
-        {
-            type: 'list',
-            name: 'signUpSignIn',
-            message: 'Would you like to...',
-            choices: ['Sign Up', 'Sign In']
-
-        },
-        
-    ])
-    .then(answers => {
-        if(answers.signUpSignIn == 'Sign Up') {
-            inquirer
-            .prompt([
-                {
-                type: 'input',
-                name: 'userName',
-                message: 'Please Enter a Username',
-                },
-                {
-                type: 'input',
-                name: 'password',
-                message: 'Please Enter a Password', 
-                }
-            ])
-            .then(answers => {
-                socket.emit('signUp', answers);
-                inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                console.log('Invalid Login');
-                socket.disconnect();
-                })
-            });
-            });
-        }
+    
+    socket.on('player', payload => {
+    console.log(payload);
+    })
+    socket.on('playerTurn',(payload) => {
+        playHand(payload);
+    })
 
 
+    socket.on('toPlayer', () => {
 
-        // create a room needs to be built out first
-        if(answers.signUpSignIn == 'Sign In'){
-            inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                    console.log('Invalid Login');
-                    socket.disconnect();
-                })
-            });
-        }
-    });
-});
+        inquirer
+          .prompt([
+              {
+                  type: 'list',
+                  name: 'signUpSignIn',
+                  message: 'Would you like to...',
+                  choices: ['Sign Up', 'Sign In']
+      
+              },
+              
+          ])
+          .then(answers => {
+              if(answers.signUpSignIn == 'Sign Up') {
+                  inquirer
+                  .prompt([
+                      {
+                      type: 'input',
+                      name: 'userName',
+                      message: 'Please Enter a Username',
+                      },
+                      {
+                      type: 'input',
+                      name: 'password',
+                      message: 'Please Enter a Password', 
+                      }
+                  ])
+                  .then(answers => {
+                      socket.emit('signUp', answers);
+                      inquirer
+                  .prompt([
+                      {
+                          type: "input",
+                          name:"userName",
+                          message: 'Please Enter Your Username',
+                      },
+                      {
+                          type: "input",
+                          name:"password",
+                          message: 'Please Enter Your Password',
+                      },
+                  ])
+                  .then ((answers) =>{
+                      socket.emit('signIn',answers);
+                      socket.on('valid', () => {
+                          console.log('Success you are logged in!');
+                          setUpRoom();
+                      })
+                      socket.on('inValid', () => {
+                      console.log('Invalid Login');
+                      socket.disconnect();
+                      })
+                  });
+                  });
+              }
+      
+              // create a room needs to be built out first
+              if(answers.signUpSignIn == 'Sign In'){
+                  inquirer
+                  .prompt([
+                      {
+                          type: "input",
+                          name:"userName",
+                          message: 'Please Enter Your Username',
+                      },
+                      {
+                          type: "input",
+                          name:"password",
+                          message: 'Please Enter Your Password',
+                      },
+                  ])
+                  .then ((answers) =>{
+                      socket.emit('signIn',answers);
+                      socket.on('valid', () => {
+                          console.log('Success you are logged in!');
+                          setUpRoom();
+                      })
+                      socket.on('inValid', () => {
+                          console.log('Invalid Login');
+                          socket.disconnect();
+                      })
+                  });
+              }
+          });
+      });
+      
 
 
 
-/** Game loop */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /** Game loop */
 const enquirer = new Enquirer();
 
 //creates or joins a room based on user input
 async function setUpRoom(){
+    try {
 
   const userObj = {};
+
 
   const askUsername = await enquirer.prompt({
     type: 'input',
@@ -173,13 +202,16 @@ async function setUpRoom(){
     });
 
   };
-
+    }
+    catch(e){
+        console.log(e);
+    }
 };
 
 
 
 async function start(){
-
+try{
   socket.on('add-new-player', async (username, player) => {
 
     const playerSex = await enquirer.prompt({
@@ -188,19 +220,25 @@ async function start(){
       message: 'Choose player sex',
       choices: ['male', 'female'],
     });
+    console.log('selected male');
+    // socket.emit('nextPlayer');
+        player.sex = playerSex.sex;
+    
+        const munchkin = {
+          username: username,
+          player: player,
+        };
+    
+        socket.emit('new-munchkin', munchkin);
+    
+        playHand();
+    
 
-    player.sex = playerSex.sex;
-
-    const munchkin = {
-      username: username,
-      player: player,
-    };
-
-    socket.emit('new-munchkin', munchkin);
-
-    playHand();
 
   });
+} catch(e){
+    console.log(e);
+}
 
 };
 
@@ -211,9 +249,9 @@ function rollTurnOrder(){
 
 // inital step of each turn. draws new face down door card, checks what it is and then makes the appropriate function call
 function playHand(){
-
-  socket.on('play-hand', async (payload) => {
-
+    socket.on('play-hand', async (payload) => {
+        console.log('playHand Func');
+        
     const playInitialCards = await enquirer.prompt({
       type: 'select',
       name: 'chooseAction',
@@ -344,7 +382,9 @@ function combat(payload, monster){
 
     };
 
-  }, 3000);
+
+  },3000);
+  nextPlayerTurn();
 
 };
 
@@ -421,33 +461,9 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
-/* 
-BASIC TURN ORDER
-1. players joins a game
-2. game starts
-3. players roll for turn order
-4. P1 kicks down door
-5. Is it a monster? 
-  i. combat starts
-  ii. if P1 can beat monster:
-    a. P1 level++
-    b. P1 recieves treasure
-    c. P1 can play any applicable cards
-  iii. if P1 can't beat monster
-    a. ask for help (stretch goal)
-    b. roll d6 to run away
-      1. if roll succeeds, P1 turn is over
-      2. if roll fails, P1 loses combat
-      3. resolve any bad stuff
-6. Is it a curse?
-  i. curse effect applies to P1 immediately
-  ii. P1 can look for trouble or loot the room (see below)
-7. Is it neither?
-  i. P1 can look for trouble
-    a. play monster from your hand, standard combat rules apply
-  ii. P1 can loot the room
-    a. face down door card goes into P1s hand
-8. P1 plays any applicable cards i.e. equipment, curses against other players etc
-9. P1 turn is over, P2 turn start
-10. Repeat from step 1
-*/
+function nextPlayerTurn() {
+    setTimeout(() => {
+        socket.emit('nextPlayer');
+
+    },3000)
+}
