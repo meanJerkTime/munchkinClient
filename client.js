@@ -71,6 +71,7 @@ async function setUpRoom(){
 
       _createRoom();
 
+
     } else if (createOrJoinRoom.createOrJoin === 'Join an existing room') {
 
       // signals the hub that someone wants to join an existing room
@@ -79,6 +80,7 @@ async function setUpRoom(){
       // retireves a list of rooms from the hub
       socket.on('get-room-list', async (rooms) => {
         
+
         let roomList = rooms;
 
         const joinExistingRoom = await enquirer.prompt({
@@ -179,6 +181,7 @@ socket.on('play-hand', async (payload) => {
       name: 'listCards',
       message: 'Would you like to see your hand?',
       choices: ['Yes', 'No']
+
     });
 
     if(lookAtHand.listCards === 'Yes'){

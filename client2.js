@@ -1,4 +1,6 @@
 'use strict';
+require('dotenv').config();
+
 
 /** 3rd party dependencies */
 // require('dotenv').config({path: require('find-config')('.env')});
