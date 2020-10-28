@@ -1,4 +1,6 @@
 'use strict';
+require('dotenv').config();
+
 
 /** 3rd party dependencies */
 // require('dotenv').config({path: require('find-config')('.env')});
@@ -6,18 +8,7 @@ const io = require('socket.io-client');
 const Enquirer = require('enquirer');
 const _ = require('lodash');
 
-<<<<<<< HEAD
-// let host = 'https://munchkin-401-hub.herokuapp.com';
-let host = 'http://localhost:5000';
-const socket = io.connect(host, {
-    'reconnection': true,
-    'reconnectionDelay': 1000,
-    'reconnectionDelayMax' : 5000,
-    'reconnectionAttempts': 5
-});
-=======
 /** Custom modules */
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
 
 /** Socket connections to hub */
 const host = 'http://localhost:3000' // Points to server hub is running on.
@@ -33,99 +24,11 @@ const enquirer = new Enquirer();
 let playerData = {};
 let playerQueue = [];
 
-<<<<<<< HEAD
-        },
-        
-    ])
-    .then(answers => {
-        if(answers.signUpSignIn == 'Sign Up') {
-            inquirer
-            .prompt([
-                {
-                type: 'input',
-                name: 'userName',
-                message: 'Please Enter a Username',
-                },
-                {
-                type: 'input',
-                name: 'password',
-                message: 'Please Enter a Password', 
-                }
-            ])
-            .then(answers => {
-                socket.emit('signUp', answers);
-                inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                console.log('Invalid Login');
-                socket.disconnect();
-                })
-            });
-            });
-        }
-
-
-
-        // create a room needs to be built out first
-        if(answers.signUpSignIn == 'Sign In'){
-            inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                    console.log('Invalid Login');
-                    socket.disconnect();
-                })
-            });
-        }
-    });
-=======
-socket.on('player', (msg, payload) => {
-  console.log({msg, payload});
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
-});
-
 //creates or joins a room based on user input
 async function setUpRoom(){
 
   try {
 
-<<<<<<< HEAD
-/** Game loop */
-const enquirer = new Enquirer();
-=======
     const userObj = {};
 
       const askUsername = await enquirer.prompt({
@@ -152,7 +55,6 @@ const enquirer = new Enquirer();
           name: 'roomName',
           message: 'What would you like to call your game room?'
         });
->>>>>>> 0ed3b4504eccee9edbda8bd0176df32981e51b5c
 
         userObj.create = true;
         userObj.room = roomName.roomName;
@@ -167,7 +69,6 @@ const enquirer = new Enquirer();
 
       _createRoom();
 
-
     } else if (createOrJoinRoom.createOrJoin === 'Join an existing room') {
 
       // signals the hub that someone wants to join an existing room
@@ -176,7 +77,6 @@ const enquirer = new Enquirer();
       // retireves a list of rooms from the hub
       socket.on('get-room-list', async (rooms) => {
         
-
         let roomList = rooms;
 
         const joinExistingRoom = await enquirer.prompt({
@@ -232,12 +132,12 @@ socket.on('add-new-player', async (payload) => {
 
 });
 
-// socket.on('add-to-queue', payload => {
+socket.on('add-to-queue', payload => {
 
-//   playerQueue.push(payload);
-//   console.log(`${payload.username} added to queue`);
+  playerQueue.push(payload);
+  console.log(`${payload.username} added to queue`);
 
-// });
+});
 
 // async function start(){
 
@@ -257,10 +157,6 @@ socket.on('add-new-player', async (payload) => {
 
 // };
 
-socket.on('player-turn', () => {
- 
-
-
 socket.on('play-hand', async (payload) => {
 
   const playInitialCards = await enquirer.prompt({
@@ -277,7 +173,6 @@ socket.on('play-hand', async (payload) => {
       name: 'listCards',
       message: 'Would you like to see your hand?',
       choices: ['Yes', 'No']
-
     });
 
     if(lookAtHand.listCards === 'Yes'){
@@ -316,7 +211,7 @@ socket.on('play-hand', async (payload) => {
 
       socket.emit('hand-has-been-played', payload);
 
-      kickDownDoor();
+      // kickDownDoor();
 
     };
 
@@ -324,7 +219,7 @@ socket.on('play-hand', async (payload) => {
 
     socket.emit('hand-has-been-played', payload);
 
-    kickDownDoor();
+    // kickDownDoor();
 
   };
 
@@ -380,8 +275,6 @@ async function kickDownDoor(payload, card){
       if(card.type === 'monster'){
   
          await combat(payload, card);
-
-         socket.emit('next-player');
   
         socket.emit('combat-ended', payload, card);
   
@@ -518,7 +411,6 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
-});
 
 /* 
 
