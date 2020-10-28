@@ -1,114 +1,17 @@
 'use strict';
-require('dotenv').config();
-const inquirer = require('inquirer');
-
-const io = require('socket.io-client');
-const Enquirer = require('enquirer');
-
-let host = 'https://munchkin-401-hub.herokuapp.com';
-// let host = 'http://localhost:5000';
-const socket = io.connect(host);
-
-socket.emit('fromPlayer');
-
-
-socket.on('toPlayer', () => {
-
-  inquirer
-    .prompt([
-        {
-            type: 'list',
-            name: 'signUpSignIn',
-            message: 'Would you like to...',
-            choices: ['Sign Up', 'Sign In']
-
-        },
-        
-    ])
-    .then(answers => {
-        if(answers.signUpSignIn == 'Sign Up') {
-            inquirer
-            .prompt([
-                {
-                type: 'input',
-                name: 'userName',
-                message: 'Please Enter a Username',
-                },
-                {
-                type: 'input',
-                name: 'password',
-                message: 'Please Enter a Password', 
-                }
-            ])
-            .then(answers => {
-                socket.emit('signUp', answers);
-                inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                    console.log('Invalid Login');
-                })
-            });
-            });
-        }
-
-
-
-        // create a room needs to be built out first
-        if(answers.signUpSignIn == 'Sign In'){
-            inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name:"userName",
-                    message: 'Please Enter Your Username',
-                },
-                {
-                    type: "input",
-                    name:"password",
-                    message: 'Please Enter Your Password',
-                },
-            ])
-            .then ((answers) =>{
-                socket.emit('signIn',answers);
-                socket.on('valid', () => {
-                    console.log('Success you are logged in!');
-                    setUpRoom();
-                })
-                socket.on('inValid', () => {
-                    console.log('Invalid Login');
-                })
-            });
-        }
-    });
-});
-
-
 
 /** 3rd party dependencies */
 // require('dotenv').config({path: require('find-config')('.env')});
-
+const io = require('socket.io-client');
+const Enquirer = require('enquirer');
+const _ = require('lodash');
 
 /** Custom modules */
 
 /** Socket connections to hub */
- // Global connection to hub.
+const host = 'http://localhost:3000' // Points to server hub is running on.
+// const host = `https://munchkin-401-hub.herokuapp.com/`;
+const socket = io.connect(host); // Global connection to hub.
 // const gameRoomConnection = io.connect(`${host}/gameroom`); // Connection to hub namespace. Not currently being used.
 
 // socket.emit('test', 'hello world') // test connection
@@ -116,166 +19,204 @@ socket.on('toPlayer', () => {
 /** Game loop */
 const enquirer = new Enquirer();
 
+let playerData = {};
+let playerQueue = [];
+
+socket.on('player', (msg, payload) => {
+  console.log({msg, payload});
+});
+
 //creates or joins a room based on user input
 async function setUpRoom(){
 
-  const userObj = {};
+  try {
 
-  const askUsername = await enquirer.prompt({
-    type: 'input',
-    name: 'username',
-    message: 'What is your username?'
-  });
+    const userObj = {};
 
-  userObj.username = askUsername.username;
-  
-  const createOrJoinRoom = await enquirer.prompt({
-    type: 'select',
-    name: 'createOrJoin',
-    message: `Welcome ${askUsername.username}! Would you like to create a new game or join an existing one?`,
-    choices: ['Create a new room', 'Join an existing room'],
-  });
-
-  if( createOrJoinRoom.createOrJoin === 'Create a new room' ){
-
-    const roomName = await enquirer.prompt({
-      type: 'input',
-      name: 'roomName',
-      message: 'What would you like to call your game room?'
-    });
-
-    userObj.room = roomName.roomName;
-
-    // sends username and new room name to event
-    socket.emit('create-room', userObj);
-
-    start();
-
-  } else if (createOrJoinRoom.createOrJoin === 'Join an existing room') {
-
-    // signals the hub that someone wants to join an existing room
-    socket.emit('join-room');
-    
-    // retireves a list of rooms from the hub
-    socket.on('get-room-list', async (rooms) => {
-      
-      let roomList = rooms;
-
-      const joinExistingRoom = await enquirer.prompt({
-        type: 'select',
-        name: 'joinRoom',
-        message: 'Choose the room you want to join',
-        initial: 'No rooms available. Try creating one!',
-        choices: roomList,
+      const askUsername = await enquirer.prompt({
+        type: 'input',
+        name: 'username',
+        message: 'What is your username?'
       });
 
-      userObj.joinedRoom = joinExistingRoom.joinRoom;
+      userObj.username = askUsername.username;
+      
+      const createOrJoinRoom = await enquirer.prompt({
+        type: 'select',
+        name: 'createOrJoin',
+        message: `Welcome ${askUsername.username}! Would you like to create a new game or join an existing one?`,
+        choices: ['Create a new room', 'Join an existing room'],
+      });
 
-      socket.emit('has-joined-room', userObj);
+    if( createOrJoinRoom.createOrJoin === 'Create a new room' ){
 
-      start();
+      const _createRoom = async () => {
 
-    });
+        const roomName = await enquirer.prompt({
+          type: 'input',
+          name: 'roomName',
+          message: 'What would you like to call your game room?'
+        });
 
+        userObj.create = true;
+        userObj.room = roomName.roomName;
+
+        // sends username and new room name to event
+        
+        socket.emit('create-room', userObj);
+
+        // start(); // adds new player to the room/ starts the loop
+
+      };
+
+      _createRoom();
+
+
+    } else if (createOrJoinRoom.createOrJoin === 'Join an existing room') {
+
+      // signals the hub that someone wants to join an existing room
+      socket.emit('join-room');
+      
+      // retireves a list of rooms from the hub
+      socket.on('get-room-list', async (rooms) => {
+        
+
+        let roomList = rooms;
+
+        const joinExistingRoom = await enquirer.prompt({
+          type: 'select',
+          name: 'joinRoom',
+          message: 'Choose the room you want to join',
+          initial: 'No rooms available. Try creating one!',
+          choices: roomList,  
+        });
+
+        userObj.create = false;
+        userObj.room = joinExistingRoom.joinRoom;
+
+        socket.emit('has-joined-room', userObj);
+
+        // start(); // adds new player to the room/ starts the loop
+
+      });
+
+    };
+
+  } catch(err) {
+    console.log(err);
   };
 
 };
 
+setUpRoom();
 
+socket.on('add-new-player', async (payload) => {
 
-async function start(){
-
-  socket.on('add-new-player', async (username, player) => {
-
-    const playerSex = await enquirer.prompt({
-      type: 'select',
-      name: 'sex',
-      message: 'Choose player sex',
-      choices: ['male', 'female'],
-    });
-
-    player.sex = playerSex.sex;
-
-    const munchkin = {
-      username: username,
-      player: player,
-    };
-
-    socket.emit('new-munchkin', munchkin);
-
-    playHand();
-
+  const playerSex = await enquirer.prompt({
+    type: 'select',
+    name: 'sex',
+    message: 'Choose player sex',
+    choices: ['male', 'female'],
   });
 
-};
+  payload.player.sex = playerSex.sex;
 
-// will be used to randomize player turn order
-function rollTurnOrder(){
+  playerData = payload;
 
-};
+  const munchkin = {
+    create: payload.create,
+    roomInfo: payload.roomData,
+    username: payload.username,
+    player: payload.player,
+  };
 
-// inital step of each turn. draws new face down door card, checks what it is and then makes the appropriate function call
-function playHand(){
+  console.log(munchkin);
 
-  socket.on('play-hand', async (payload) => {
+  socket.emit('new-munchkin', munchkin);
 
-    const playInitialCards = await enquirer.prompt({
+});
+
+// socket.on('add-to-queue', payload => {
+
+//   playerQueue.push(payload);
+//   console.log(`${payload.username} added to queue`);
+
+// });
+
+// async function start(){
+
+//   try {
+
+//     while(playerQueue.length > 0){
+
+//       let currentPlayer = playerQueue.shift();
+
+//       playerQueue.push(currentPlayer);
+
+//     };
+
+//   } catch(err) {
+//     console.log(err);
+//   };
+
+// };
+
+socket.on('player-turn', () => {
+ 
+
+
+socket.on('play-hand', async (payload) => {
+
+  const playInitialCards = await enquirer.prompt({
+    type: 'select',
+    name: 'chooseAction',
+    message: 'Would you like to play a card before kicking down a door?',
+    choices: ['Yes, I\'ll play a card.', 'No, let\'s lick down that door!']
+  });
+
+  if(playInitialCards.chooseAction === 'Yes, I\'ll play a card.'){
+
+    const lookAtHand = await enquirer.prompt({
       type: 'select',
-      name: 'chooseAction',
-      message: 'Would you like to play a card before kicking down a door?',
-      choices: ['Yes, I\'ll play a card.', 'No, let\'s lick down that door!']
+      name: 'listCards',
+      message: 'Would you like to see your hand?',
+      choices: ['Yes', 'No']
+
     });
 
-    if(playInitialCards.chooseAction === 'Yes, I\'ll play a card.'){
+    if(lookAtHand.listCards === 'Yes'){
 
-      const lookAtHand = await enquirer.prompt({
-        type: 'select',
-        name: 'listCards',
-        message: 'Would you like to see your hand?',
-        choices: ['Yes', 'No']
+      // looks at the player's hand
+      console.log(listHand(payload.player.hand));
+
+      let cardNames = [];
+      payload.player.hand.forEach( element =>{
+        cardNames.push(element.name);
+      });
+      
+      const playCards = await enquirer.prompt({
+        type: 'multiselect',
+        name: 'playCards',
+        message: 'Choose cards to play!',
+        hint: 'move with arror keys, select with space',
+        choices: cardNames,
       });
 
-      if(lookAtHand.listCards === 'Yes'){
+      // console.log('playCards prompt', playCards);
 
-        // looks at the player's hand
-        console.log(listHand(payload.player.hand));
+      // console.log('playCards.playCards', playCards.playCards);
+      // console.log('payload.player.hand', payload.player.hand);
+      
+      // cards the user has selected from their hand to play
+      let cardsToPlay = [];
 
-        let cardNames = [];
-        payload.player.hand.forEach( element =>{
-          cardNames.push(element.name);
-        });
-        
-        const playCards = await enquirer.prompt({
-          type: 'multiselect',
-          name: 'playCards',
-          message: 'Choose cards to play!',
-          hint: 'move with arror keys, select with space',
-          choices: cardNames,
-        });
+      payload.player.hand.forEach( idx => {
+        if(playCards.playCards.includes(idx.name)){
+          cardsToPlay.push(idx)
+        };
+      });
 
-        // console.log('playCards prompt', playCards);
-
-        // console.log('playCards.playCards', playCards.playCards);
-        // console.log('payload.player.hand', payload.player.hand);
-        
-        // cards the user has selected from their hand to play
-        let cardsToPlay = [];
-
-        payload.player.hand.forEach( idx => {
-          if(playCards.playCards.includes(idx.name)){
-            cardsToPlay.push(idx)
-          };
-        });
-
-        playSelectedCards(payload.player, cardsToPlay);
-
-        socket.emit('hand-has-been-played', payload);
-
-        kickDownDoor();
-
-      };
-
-    } else if(playInitialCards.chooseAction === 'No, let\'s lick down that door!'){
+      playSelectedCards(payload.player, cardsToPlay);
 
       socket.emit('hand-has-been-played', payload);
 
@@ -283,27 +224,75 @@ function playHand(){
 
     };
 
-  });
+  } else if(playInitialCards.chooseAction === 'No, let\'s lick down that door!'){
+
+    socket.emit('hand-has-been-played', payload);
+
+    kickDownDoor();
+
+  };
+
+});
+
+socket.on('not-your-turn', (payload) => {
+  console.log('is this thing on?');
+  notYourTurn(payload);
+});
+
+function notYourTurn(payload){
+
+  listHand(payload.player.hand);
+  console.log('you are waiting');
 
 };
 
-function kickDownDoor(){
+// will be used to randomize player turn order
+function rollTurnOrder(){
+  // logic to randomize turn order could go here
+};
 
-  socket.on('kick-down-door', (payload, card) => {
+// inital step of each turn. draws new face down door card, checks what it is and then makes the appropriate function call
+async function playHand(){
 
-    setTimeout( () => {
+  try {
+
+    socket.on('play-hand', async (payload) => {
+
+
+
+    });
+
+  } catch(err) {
+    console.log(err)
+  };
+
+};
+
+socket.on('kick-down-door', (payload, card) => {
+
+  kickDownDoor(payload, card);
+
+});
+
+async function kickDownDoor(payload, card){
+
+  try {
+
+    const foo = async () => {
       console.log('Alright brave and mighty Munchkin, kick down that door!');
-
+  
       if(card.type === 'monster'){
+  
+         await combat(payload, card);
 
-        combat(payload, card);
-
+         socket.emit('next-player');
+  
         socket.emit('combat-ended', payload, card);
-
+  
       } else if (card.type === 'curse'){
         //applyCurse();
         console.log('you are cursed!');
-
+  
       } else {
         console.log('cards in your hand ++');
         // add card to players hand
@@ -313,43 +302,50 @@ function kickDownDoor(){
           // if look for trouble
             // lookForTrouble()
       };
+  
+    };
 
-    }, 1000);
+    await foo();
 
-  });
+    socket.emit('turn-over', payload);
+
+  } catch(err) {
+    console.log(err);
+  };
 
 };
 
 // pits player.combatPower against monster.level. 2 cards enter, 1 card leaves!
-function combat(payload, monster){
+async function combat(payload, monster){
 
-  setTimeout( () => {
-    console.log('Two cards enter, one card leaves! It\'s Munchkin time!');
+  try {
 
-    if(payload.player.combatPower > monster.level){
+      console.log('Two cards enter, one card leaves! It\'s Munchkin time!');
 
-      // if player.job === warrior, will win on a tie
+      if(payload.player.combatPower > monster.level){
 
-      setTimeout( () => {
-        console.log(`Huzzah! You have prevailed over the ${monster.name}. For your mighty deeds, you have earned ${monster.levelsGiven} levels and ${monster.treasures} treasure!`);
+        // if player.job === warrior, will win on a tie
 
-        // apply new level and treasure to player object on hub from socket.emit('combat-ended')
+          console.log(`Huzzah! You have prevailed over the ${monster.name}. For your mighty deeds, you have earned ${monster.levelsGiven} levels and ${monster.treasures} treasure!`);
 
-      });
-    } else if(payload.player.combatPower <= monster.level){
+          // apply new level and treasure to player object on hub from socket.emit('combat-ended')
 
-      // have items to boost power or weaken an enemy?
-      // ask a friend to help? (stretch goal)
-      // if not, roll to run away, else bad stuff incoming
+      } else if(payload.player.combatPower <= monster.level){
 
-    } else {
+        // have items to boost power or weaken an enemy?
+        // ask a friend to help? (stretch goal)
+        // if not, roll to run away, else bad stuff incoming
 
-      console.log('Oh no! You get some Bad Stuff!');
-      badStuff(payload, monster);
+      } else {
 
-    };
+        console.log('Oh no! You get some Bad Stuff!');
+        badStuff(payload, monster);
 
-  }, 3000);
+      };
+
+  } catch(err) {
+    console.log(err);
+  };
 
 };
 
@@ -380,15 +376,15 @@ async function lookForTrouble(){
 // list players hand. should be run (prompted) at each step.
 function listHand(hand){
 
+  // console.log(hand);
   let list = JSON.stringify(hand, null, 2);
+  console.log(list);
   return list;
 
 };
 
 function playSelectedCards(player, cards){
 
-  // console.log({player});
-  // console.log({cards});
   // console.log(player.gear);
 
   // if card.type == gear/loot/equipment
@@ -426,8 +422,12 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
+});
+
 /* 
+
 BASIC TURN ORDER
+
 1. players joins a game
 2. game starts
 3. players roll for turn order
@@ -455,4 +455,5 @@ BASIC TURN ORDER
 8. P1 plays any applicable cards i.e. equipment, curses against other players etc
 9. P1 turn is over, P2 turn start
 10. Repeat from step 1
+
 */
