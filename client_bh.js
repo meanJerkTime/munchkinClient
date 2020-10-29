@@ -33,7 +33,7 @@ const socket = io.connect(host, {
     let playerHand = hand;
 
     socket.on('playerTurn', () =>{
-        console.log(character);
+
         inquirer
         .prompt([
             {
@@ -78,7 +78,8 @@ const socket = io.connect(host, {
 
                             }
                         }
-                        if(character.level === 10) {
+
+                        if(character.level >= 10) {
                             socket.emit('winner')
                         }
                         else {
