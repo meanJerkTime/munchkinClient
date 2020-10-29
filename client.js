@@ -6,8 +6,6 @@ const Enquirer = require('enquirer');
 const enquirer = new Enquirer();
 
 const io = require('socket.io-client');
-
-
 // let host = 'https://munchkin-401-hub.herokuapp.com';
 let host = 'http://localhost:5000';
 
