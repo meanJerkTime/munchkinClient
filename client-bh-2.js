@@ -96,7 +96,7 @@ login();
                   .then ((answers) =>{
                       socket.emit('signIn', answers);
                       socket.on('valid', (payload) => {
-                        console.log('Success you are logged in!');
+                        // console.log('Success you are logged in!');
                         // create promtps to add to payload character then emit the 'ready' event
                         player.name = payload; 
                         console.log(player, 'second')
@@ -141,13 +141,12 @@ const enquirer = new Enquirer();
 
 socket.on('playerTurn', (payload) => {
   console.log(payload, 'four');
-  playHand(payload);
+
   if(!payload.player) {
-    
     socket.emit('new-munchkin', payload);
     }
     else {
-      playHand(payload);
+      playHand();
     }
 })
   // console.log(payload, 'player array');
@@ -262,7 +261,7 @@ socket.on('playerTurn', (payload) => {
 
 // };
 // inital step of each turn. draws new face down door card, checks what it is and then makes the appropriate function call
-function playHand(payload){
+function playHand(){
     socket.on('play-hand', async (payload) => {
         console.log('playHand Func');
         
@@ -398,7 +397,7 @@ function combat(payload, monster){
 
 
   },3000);
-  nextPlayerTurn(payload);
+  nextPlayerTurn();
 
 };
 
@@ -476,9 +475,9 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
-function nextPlayerTurn(payload) {
+function nextPlayerTurn() {
   setTimeout(() => {
-    socket.emit('nextPlayer', payload);
+    socket.emit('nextPlayer');
     
   },3000)
 }
