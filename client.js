@@ -4,7 +4,9 @@
 // require('dotenv').config({path: require('find-config')('.env')});
 const io = require('socket.io-client');
 const Enquirer = require('enquirer');
+const inquirer = require('inquirer')
 const _ = require('lodash');
+
 /** Custom modules */
 
 // let host = 'https://munchkin-401-hub.herokuapp.com';
@@ -15,6 +17,7 @@ const socket = io.connect(host, {
     'reconnectionDelayMax' : 5000,
     'reconnectionAttempts': 5
 });
+
 
 /** Socket connections to hub */
 const host = 'http://localhost:3000' // Points to server hub is running on.
@@ -29,6 +32,7 @@ const enquirer = new Enquirer();
 
 let playerData = {};
 let playerQueue = [];
+
 
 
 socket.on('player', (msg, payload) => {

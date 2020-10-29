@@ -4,7 +4,6 @@ const inquirer = require('inquirer');
 const Choice = require('inquirer/lib/objects/choice');
 const Enquirer = require('enquirer');
 const enquirer = new Enquirer();
-
 const io = require('socket.io-client');
 
 
@@ -17,6 +16,7 @@ const socket = io.connect(host, {
     'reconnectionDelayMax' : 5000,
     'reconnectionAttempts': 5
 });
+
 
 let player = {};
 
@@ -121,7 +121,7 @@ function login() {
     }
 }
 
-  async function playHand(payload){
+async function playHand(payload){
         console.log('playHand Func');
         
     const playInitialCards = await enquirer.prompt({
@@ -172,6 +172,7 @@ function login() {
           };
         });
 
+
         playSelectedCards(payload, cardsToPlay);
 
         socket.emit('hand-has-been-played', payload);
@@ -183,6 +184,7 @@ function login() {
     } else if(playInitialCards.chooseAction === 'No, let\'s lick down that door!'){
 
       socket.emit('hand-has-been-played', payload);
+
 
       // kickDownDoor();
 
@@ -218,6 +220,7 @@ function login() {
 
     }, 1000);
 
+
 };
 
 // pits player.combatPower against monster.level. 2 cards enter, 1 card leaves!
@@ -251,6 +254,7 @@ async function combat(payload, monster){
 
 
   },3000);
+
   nextPlayerTurn(payload);
 
 };
@@ -288,7 +292,9 @@ function listHand(hand){
 
 };
 
+
 function playSelectedCards(payload, cards){
+
 
   // console.log({player});
   // console.log({cards});
@@ -297,9 +303,11 @@ function playSelectedCards(payload, cards){
   // if card.type == gear/loot/equipment
   // add selected cards to player.gear
   cards.forEach( idx => {
+
     payload.player.gear[idx.name] = idx;
     payload.player.gear.bonus += idx.bonus;
     payload.player.combatPower = (payload.player.level + payload.player.gear.bonus)
+
   });
 
   // pulls names off of cards for reference
@@ -310,13 +318,16 @@ function playSelectedCards(payload, cards){
   
   // adds a new hand to the player by pushing unused cards into a new array
   let newHand = [];
+
   payload.player.hand.forEach( idx => {
+
     if(!cardNames.includes(idx.name)){
       newHand.push(idx);
     };
   });
 
   // set new hand to player
+
   payload.player.hand = newHand;
 
   // console.log(player);
@@ -329,10 +340,12 @@ function discard(player, n){
   // ensure validation is in place to limit player hand to 5, or 6 if player.job === dwarf
 };
 
+
 function nextPlayerTurn(payload) {
   setTimeout(() => {
     socket.emit('nextPlayer', payload);
     
   },3000)
 }
+
 
